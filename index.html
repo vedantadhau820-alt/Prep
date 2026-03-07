@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prep</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0b0f">
+  
+<style>
+
+body{
+margin:0;
+font-family:Inter,system-ui;
+background:#0b0b0f;
+color:white;
+}
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background-image:
+linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+background-size:40px 40px;
+z-index:-1;
+}
+
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 40px;
+background:rgba(255,255,255,0.03);
+backdrop-filter:blur(12px);
+border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.logo{
+font-size:24px;
+font-weight:700;
+}
+
+.nav-sub{
+font-size:11px;
+letter-spacing:.2em;
+text-transform:uppercase;
+opacity:.5;
+}
+
+.nav-right{
+text-align:right;
+}
+
+.days{
+font-size:16px;
+font-weight:600;
+}
+
+.percent{
+font-size:12px;
+opacity:.6;
+margin-top:4px;
+}
+
+.hero{
+max-width:700px;
+margin:50px auto;
+padding:30px;
+text-align:center;
+background:rgba(255,255,255,0.02);
+border:1px solid rgba(255,255,255,0.05);
+border-radius:14px;
+}
+
+.hero-label{
+font-size:11px;
+letter-spacing:.25em;
+text-transform:uppercase;
+opacity:.5;
+margin-bottom:14px;
+}
+
+.quote{
+font-size:26px;
+line-height:1.5;
+font-weight:500;
+}
+
+main{
+max-width:700px;
+margin:auto;
+padding:10px 25px 40px;
+}
+
+.date{
+opacity:.8;
+margin-bottom:20px;
+}
+
+.progress{
+height:8px;
+background:#1b1b24;
+border-radius:20px;
+overflow:hidden;
+margin-bottom:35px;
+}
+
+.bar{
+height:100%;
+background:#7c5cff;
+width:0%;
+transition:width .4s;
+}
+
+.subject{
+margin-bottom:20px;
+}
+
+.subject-title{
+font-size:12px;
+letter-spacing:.08em;
+text-transform:uppercase;
+opacity:.5;
+margin-bottom:8px;
+}
+
+.task{
+display:flex;
+align-items:center;
+gap:14px;
+padding:10px;
+border-radius:10px;
+}
+
+.task:hover{
+background:#14141b;
+}
+
+.task input{
+appearance:none;
+width:18px;
+height:18px;
+border-radius:5px;
+border:2px solid #444;
+cursor:pointer;
+position:relative;
+}
+
+.task input:checked{
+background:#22c55e;
+border:none;
+}
+
+.task input:checked::after{
+content:"✓";
+color:white;
+font-size:13px;
+position:absolute;
+left:3px;
+top:-1px;
+}
+
+.done{
+background:rgba(34,197,94,0.08);
+border:1px solid rgba(34,197,94,0.25);
+}
+
+.done span{
+color:#22c55e;
+}
+
+.trophy{
+position:fixed;
+font-size:30px;
+pointer-events:none;
+animation:trophyPop .9s forwards;
+}
+
+@keyframes trophyPop{
+0%{transform:scale(.5);opacity:0;}
+40%{transform:scale(1.4);opacity:1;}
+100%{transform:translateY(-80px);opacity:0;}
+}
+
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+
+<div>
+<div class="logo">Prep</div>
+<div class="nav-sub">Study Tracker</div>
+</div>
+
+<div class="nav-right">
+<div class="days" id="days"></div>
+<div class="percent" id="percent"></div>
+</div>
+
+</nav>
+
+<section class="hero">
+<div class="hero-label">Focus Thought</div>
+<div class="quote" id="quote"></div>
+</section>
+
+<main>
+
+<div class="date" id="today"></div>
+
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<div id="tasks"></div>
+
+</main>
+
+<audio id="rewardSound"
+src="https://cdn.pixabay.com/audio/2022/10/16/audio_7c3a4b63fa.mp3"></audio>
+
+<script>
+
+/* QUOTES */
+
+const quotes=[
+
+"Discipline is choosing between what you want now and what you want most.",
+
+"Every day you delay, someone else moves ahead.",
+
+"The future you fear is created by the actions you avoid today.",
+
+"Your comfort zone is the most expensive place you can live.",
+
+"The difference between dreamers and winners is what they do when they are tired.",
+
+"One focused hour can defeat ten distracted ones.",
+
+"You don't rise to your goals, you fall to your habits.",
+
+"Greatness is built quietly while others are distracted.",
+
+"The pain of discipline weighs ounces, the pain of regret weighs tons.",
+
+"Your competition is studying while you are scrolling.",
+
+"A small improvement repeated daily becomes unstoppable power.",
+
+"The life you want is hiding behind the work you avoid.",
+
+"Consistency is the silent architect of success.",
+
+"The moment you want to quit is the moment growth begins.",
+
+"Focus is saying no to a thousand distractions.",
+
+"The strongest people are the ones who win battles no one sees.",
+
+"Every mastered topic is a weapon against your future challenges.",
+
+"Most people wait for motivation, champions build discipline.",
+
+"Success is rarely about intelligence, it is about endurance.",
+
+"The person you become tomorrow is decided by what you do tonight.",
+
+"Progress feels slow until the day it changes everything.",
+
+"Every checkbox you tick is a vote for your future self.",
+
+"The mind grows stronger every time you do hard things.",
+
+"Your future is quietly watching the choices you make today.",
+
+"One day you will thank yourself for not giving up."
+
+]
+
+document.getElementById("quote").innerText =
+quotes[Math.floor(Date.now()/86400000)%quotes.length]
+
+/* DATES */
+
+const start = new Date("2026-03-08")
+const exam = new Date("2026-03-30")
+
+/* Change this date to test different days */
+
+const today = new Date()
+
+function diff(a,b){
+return Math.floor((b-a)/(1000*60*60*24))
+}
+
+const dayIndex = Math.max(0,diff(start,today))
+
+/* SYLLABUS */
+
+const syllabus={
+
+Math:[
+"Algebraic Polynomial and Identities",
+"Quadratic Equations",
+"Indices",
+"Logarithm",
+"Binomial Theorem",
+"Permutation and Combination",
+"Probability",
+"Statistics",
+"Ratio and Proportion",
+"Time and Work",
+"Speed and Distance",
+"Percentage",
+"Set Theory",
+"Relations and Mappings",
+"Area and Perimeter"
+],
+
+Reasoning:[
+"Coding-Decoding",
+"Direction Sense",
+"Blood Relation",
+"Analogy",
+"Classification",
+"Series",
+"Alphabet Test",
+"Ranking",
+"Seating Arrangements",
+"Puzzles",
+"Logical Deductions",
+"Image Series",
+"Image Puzzle",
+"Venn Diagram",
+"Number Puzzle",
+"Arithmetical Problems",
+"Cube and Dice",
+"Syllogism",
+"Data Sufficiency",
+"Clock and Calendar"
+],
+
+Computer:[
+"Computer Fundamentals",
+"Input and Output Devices",
+"Computer Memory",
+"Computer Architecture",
+"Digital Electronics",
+"Computer Software",
+"Operating System",
+"Computer Language",
+"Microsoft Office",
+"Internet",
+"Computer Security"
+],
+
+English:[
+"Spotting the Errors",
+"Fill in the Blanks",
+"Synonyms & Antonyms",
+"Idioms and Phrases",
+"Jumbled Sentence/Paragraph",
+"Reading Comprehension",
+"Cloze Test"
+]
+
+}
+/* STORAGE */
+
+const data = JSON.parse(localStorage.getItem("prep") || "{}")
+
+const tasks = document.getElementById("tasks")
+
+let todayTotal = 0
+let todayDone = 0
+
+/* RENDER TASKS */
+
+for(let subject in syllabus){
+
+const topics = syllabus[subject]
+
+const topic = topics[dayIndex % topics.length]
+
+const wrapper=document.createElement("div")
+wrapper.className="subject"
+
+wrapper.innerHTML=`<div class="subject-title">${subject}</div>`
+
+const row=document.createElement("div")
+row.className="task"
+
+const cb=document.createElement("input")
+cb.type="checkbox"
+cb.checked=data[topic]
+
+if(cb.checked){
+row.classList.add("done")
+todayDone++
+}
+
+cb.onchange=()=>{
+
+data[topic]=cb.checked
+localStorage.setItem("prep",JSON.stringify(data))
+
+if(cb.checked){
+row.classList.add("done")
+reward(row)
+todayDone++
+}else{
+row.classList.remove("done")
+todayDone--
+}
+
+updateProgress()
+updatePercent()
+
+}
+
+const span=document.createElement("span")
+span.innerText=topic
+
+row.appendChild(cb)
+row.appendChild(span)
+
+wrapper.appendChild(row)
+tasks.appendChild(wrapper)
+
+todayTotal++
+
+}
+
+/* REWARD */
+
+function reward(el){
+
+document.getElementById("rewardSound").play()
+
+const rect=el.getBoundingClientRect()
+
+const trophy=document.createElement("div")
+trophy.className="trophy"
+trophy.innerText="🏆"
+
+trophy.style.left=rect.left+"px"
+trophy.style.top=rect.top+"px"
+
+document.body.appendChild(trophy)
+
+setTimeout(()=>trophy.remove(),900)
+
+}
+
+/* PROGRESS */
+
+function updateProgress(){
+
+if(todayTotal===0)return
+
+const progress=Math.floor((todayDone/todayTotal)*100)
+
+document.getElementById("bar").style.width=progress+"%"
+
+}
+
+/* SYLLABUS COMPLETION */
+
+function updatePercent(){
+
+let total=0
+let completed=0
+
+for(let subject in syllabus){
+
+total+=syllabus[subject].length
+
+syllabus[subject].forEach(topic=>{
+if(data[topic]) completed++
+})
+
+}
+
+const percent=Math.floor((completed/total)*100)
+
+document.getElementById("percent").innerText =
+percent+"% syllabus complete"
+
+}
+
+updateProgress()
+updatePercent()
+
+document.getElementById("today").innerText = today.toDateString()
+
+document.getElementById("days").innerText =
+diff(today,exam)+" Days Left"
+
+</script>
+
+  <script>
+
+if("serviceWorker" in navigator){
+
+window.addEventListener("load",()=>{
+
+navigator.serviceWorker.register("service-worker.js")
+
+})
+
+}
+
+  </script>
+</body>
+</html>
