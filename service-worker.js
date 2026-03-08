@@ -1,4 +1,4 @@
-const CACHE_NAME = "prep-cache-v4"
+const CACHE_NAME = "prep-cache-v5"
 
 const ASSETS = [
 "/",
