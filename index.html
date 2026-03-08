@@ -384,7 +384,7 @@ for(let subject in syllabus){
 
 const topics = syllabus[subject]
 
-const topic = topics[dayIndex % topics.length]
+const topic = topics.find(t => !data[t]) || topics[topics.length-1]
 
 const wrapper=document.createElement("div")
 wrapper.className="subject"
@@ -411,6 +411,7 @@ localStorage.setItem("prep",JSON.stringify(data))
 if(cb.checked){
 row.classList.add("done")
 reward(row)
+setTimeout(()=>location.reload(),500)
 todayDone++
 }else{
 row.classList.remove("done")
