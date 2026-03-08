@@ -384,47 +384,67 @@ for(let subject in syllabus){
 
 const topics = syllabus[subject]
 
-const topic = topics.find(t => !data[t]) || topics[topics.length-1]
+/* find first unfinished topic */
 
-const wrapper=document.createElement("div")
-wrapper.className="subject"
+let topic = topics.find(t => !data[t])
 
-wrapper.innerHTML=`<div class="subject-title">${subject}</div>`
+/* if all finished show last topic */
 
-const row=document.createElement("div")
-row.className="task"
-
-const cb=document.createElement("input")
-cb.type="checkbox"
-cb.checked=data[topic]
-
-if(cb.checked){
-row.classList.add("done")
-todayDone++
+if(!topic){
+topic = topics[topics.length-1]
 }
 
-cb.onchange=()=>{
+const wrapper = document.createElement("div")
+wrapper.className = "subject"
 
-data[topic]=cb.checked
-localStorage.setItem("prep",JSON.stringify(data))
+wrapper.innerHTML = `<div class="subject-title">${subject}</div>`
+
+const row = document.createElement("div")
+row.className = "task"
+
+const cb = document.createElement("input")
+cb.type = "checkbox"
+
+const span = document.createElement("span")
+span.innerText = topic
+
+cb.onchange = ()=>{
 
 if(cb.checked){
+
+/* save completion */
+
+data[topic] = true
+localStorage.setItem("prep", JSON.stringify(data))
+
 row.classList.add("done")
 reward(row)
-setTimeout(()=>location.reload(),500)
+
 todayDone++
-}else{
-row.classList.remove("done")
-todayDone--
-}
 
 updateProgress()
 updatePercent()
 
+/* load next topic */
+
+const next = topics.find(t => !data[t])
+
+if(next){
+
+setTimeout(()=>{
+
+topic = next
+span.innerText = next
+cb.checked = false
+row.classList.remove("done")
+
+},400)
+
 }
 
-const span=document.createElement("span")
-span.innerText=topic
+}
+
+}
 
 row.appendChild(cb)
 row.appendChild(span)
